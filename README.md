@@ -1,6 +1,6 @@
-#  AK Lecture Assistant
+# Lectura AI
 
-An AI-powered learning assistant that transforms YouTube lectures into structured insights and interactive conversations.
+AI-powered learning assistant that transforms lecture videos into structured insights and interactive conversations.
 
 ---
 
