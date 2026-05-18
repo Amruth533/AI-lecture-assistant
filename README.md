@@ -1,4 +1,4 @@
-# Lectura AI
+# Lecture AI
 
 AI-powered learning assistant that transforms lecture videos into structured insights and interactive conversations.
 
