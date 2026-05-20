@@ -1,130 +1,380 @@
+# app.py
+
 import streamlit as st
 import requests
 
-# 🔥 PAGE CONFIG
+
+# ============================================================
+# PAGE CONFIG
+# ============================================================
+
 st.set_page_config(
     page_title="AK Lecture Assistant",
+    page_icon="🎓",
     layout="wide"
 )
 
-# 🎨 HEADER
-st.markdown("""
-<h1 style='margin-bottom:0;'>AK Lecture Assistant</h1>
-<p style='color:gray;'>Learn from lectures using AI-powered summaries and contextual Q&A.</p>
-""", unsafe_allow_html=True)
 
+# ============================================================
+# CUSTOM CSS
+# ============================================================
+
+st.markdown(
+    """
+    <style>
+
+    .main {
+        padding-top: 1rem;
+    }
+
+    .stButton button {
+        width: 100%;
+        height: 3rem;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .answer-box {
+        background-color: #111827;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid #374151;
+        margin-top: 10px;
+    }
+
+    .source-box {
+        background-color: #1f2937;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
+# HEADER
+# ============================================================
+
+st.title("🎓 AK Lecture Assistant")
+
+st.caption(
+    "AI-powered lecture summarization and grounded Q&A"
+)
+
+
+# ============================================================
 # SESSION STATE
+# ============================================================
+
+if "processed" not in st.session_state:
+    st.session_state.processed = False
+
 if "summary" not in st.session_state:
-    st.session_state.summary = None
+    st.session_state.summary = ""
 
 if "transcript" not in st.session_state:
-    st.session_state.transcript = None
+    st.session_state.transcript = ""
+
+if "stats" not in st.session_state:
+    st.session_state.stats = {}
 
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# 📥 SIDEBAR INPUT
+
+# ============================================================
+# SIDEBAR
+# ============================================================
+
 with st.sidebar:
-    st.header("📥 Input")
 
-    url = st.text_input("YouTube URL")
+    st.header("⚙️ Features")
 
-    process_btn = st.button("🚀 Process Lecture")
+    st.markdown("""
+    ✅ Transcript Extraction  
+    ✅ AI Summarization  
+    ✅ Grounded Q&A  
+    ✅ RAG Architecture  
+    ✅ FAISS Retrieval  
+    ✅ Timestamp Context  
+    ✅ Hallucination Control  
+    """)
 
-# MAIN LAYOUT
-left, right = st.columns([1, 2])
+    st.divider()
 
-# 🚀 PROCESS
-if process_btn:
-    try:
-        with st.spinner("Analyzing lecture..."):
-            res = requests.post(
-                "http://127.0.0.1:8000/process",
-                params={"url": url},
-                timeout=30
-            )
+    st.info(
+        "Answers are generated ONLY "
+        "from lecture transcript context."
+    )
 
-        data = res.json()
 
-        if "error" in data:
-            st.error(data["error"])
-        else:
-            st.success("Lecture processed successfully!")
+# ============================================================
+# YOUTUBE URL INPUT
+# ============================================================
 
-            st.session_state.summary = data["summary"]
-            st.session_state.transcript = data["full_text"]
-            st.session_state.chat_history = []
+url = st.text_input(
+    "📺 Enter YouTube Lecture URL"
+)
 
-    except Exception as e:
-        st.error(str(e))
 
-# 📊 LEFT COLUMN (Stats)
-with left:
-    if st.session_state.transcript:
-        st.markdown("### 📊 Lecture Stats")
-        st.write(f"Words: {len(st.session_state.transcript.split())}")
+# ============================================================
+# PROCESS BUTTON
+# ============================================================
 
-# 📝 RIGHT COLUMN (Summary)
-with right:
-    if st.session_state.summary:
-        st.markdown("## 📝 Summary")
-        st.write(st.session_state.summary)
+if st.button("🚀 Process Lecture"):
 
-# 📚 TABS (Chat + Transcript)
-if st.session_state.transcript:
+    if not url:
 
-    tab1, tab2 = st.tabs(["💬 Chat", "📄 Transcript"])
+        st.warning("Please enter a valid YouTube URL.")
 
-    # 💬 CHAT TAB
-    with tab1:
-        st.subheader("Ask Questions")
+    else:
 
-        # Display chat
-        for chat in st.session_state.chat_history:
-            with st.chat_message(chat["role"]):
-                st.write(chat["message"])
-
-        question = st.chat_input("Ask something about the lecture")
-
-        if question:
-            # Save user message
-            st.session_state.chat_history.append({
-                "role": "user",
-                "message": question
-            })
-
-            with st.chat_message("user"):
-                st.write(question)
+        with st.spinner(
+            "Processing lecture..."
+        ):
 
             try:
-                with st.spinner("Thinking..."):
-                    res = requests.post(
-                        "http://127.0.0.1:8000/ask",
-                        params={"question": question},
-                        timeout=30
-                    )
 
-                data = res.json()
+                response = requests.post(
+                    "http://127.0.0.1:8000/process",
+                    json={"url": url},
+                    timeout=300
+                )
+
+                data = response.json()
 
                 if "error" in data:
+
                     st.error(data["error"])
+
                 else:
-                    answer = data["answer"]
 
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "message": answer
-                    })
+                    st.session_state.processed = True
 
-                    with st.chat_message("assistant"):
-                        st.write(answer)
+                    st.session_state.summary = data["summary"]
 
-                    with st.expander("📌 Source"):
-                        st.write(data["source"])
+                    st.session_state.transcript = (
+                        data["transcript"]
+                    )
+
+                    st.session_state.stats = (
+                        data["stats"]
+                    )
+
+                    st.success(
+                        "Lecture processed successfully!"
+                    )
 
             except Exception as e:
-                st.error(str(e))
 
-    # 📄 TRANSCRIPT TAB
-    with tab2:
-        st.text_area("Transcript", st.session_state.transcript, height=400)
+                st.error(f"Error: {str(e)}")
+
+
+# ============================================================
+# DISPLAY RESULTS
+# ============================================================
+
+if st.session_state.processed:
+
+    col1, col2 = st.columns([1, 1])
+
+    # --------------------------------------------------------
+    # LEFT SIDE
+    # --------------------------------------------------------
+
+    with col1:
+
+        st.subheader("📌 Lecture Summary")
+
+        st.markdown(
+            st.session_state.summary
+        )
+
+        st.divider()
+
+        st.subheader("📊 Lecture Statistics")
+
+        stats = st.session_state.stats
+
+        col_a, col_b = st.columns(2)
+
+        with col_a:
+
+            st.metric(
+                "Words",
+                stats.get("word_count", 0)
+            )
+
+        with col_b:
+
+            st.metric(
+                "Chunks",
+                stats.get("chunk_count", 0)
+            )
+
+    # --------------------------------------------------------
+    # RIGHT SIDE
+    # --------------------------------------------------------
+
+    with col2:
+
+        st.subheader("📄 Transcript")
+
+        st.text_area(
+            "Transcript",
+            st.session_state.transcript,
+            height=500
+        )
+
+
+# ============================================================
+# Q&A SECTION
+# ============================================================
+
+st.divider()
+
+st.subheader("💬 Ask Questions")
+
+question = st.text_input(
+    "Ask a question about the lecture"
+)
+
+
+# ============================================================
+# ASK BUTTON
+# ============================================================
+
+if st.button("Ask AI"):
+
+    if not st.session_state.processed:
+
+        st.warning(
+            "Please process a lecture first."
+        )
+
+    elif not question:
+
+        st.warning(
+            "Please enter a question."
+        )
+
+    else:
+
+        with st.spinner(
+            "Generating grounded answer..."
+        ):
+
+            try:
+
+                response = requests.post(
+                    "http://127.0.0.1:8000/ask",
+                    json={
+                        "question": question
+                    },
+                    timeout=300
+                )
+
+                data = response.json()
+
+                if "error" in data:
+
+                    st.error(data["error"])
+
+                else:
+
+                    answer = data.get(
+                        "answer",
+                        "No answer generated."
+                    )
+
+                    sources = data.get(
+                        "sources",
+                        []
+                    )
+
+                    # ------------------------------------
+                    # SAVE CHAT HISTORY
+                    # ------------------------------------
+
+                    st.session_state.chat_history.append({
+                        "question": question,
+                        "answer": answer,
+                        "sources": sources
+                    })
+
+            except Exception as e:
+
+                st.error(f"Error: {str(e)}")
+
+
+# ============================================================
+# CHAT HISTORY
+# ============================================================
+
+if st.session_state.chat_history:
+
+    st.divider()
+
+    st.subheader("🧠 Conversation")
+
+    for chat in reversed(
+        st.session_state.chat_history
+    ):
+
+        st.markdown(
+            f"### ❓ {chat['question']}"
+        )
+
+        st.markdown(
+            f"""
+            <div class="answer-box">
+            {chat['answer']}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # ----------------------------------------------------
+        # SOURCES
+        # ----------------------------------------------------
+
+        if chat["sources"]:
+
+            with st.expander(
+                "📚 Retrieved Lecture Context"
+            ):
+
+                for source in chat["sources"]:
+
+                    timestamp = round(
+                        source["start"] / 60,
+                        2
+                    )
+
+                    st.markdown(
+                        f"""
+                        <div class="source-box">
+
+                        <b>Timestamp:</b>
+                        {timestamp} min
+
+                        <br><br>
+
+                        <b>Similarity Score:</b>
+                        {round(source['score'], 3)}
+
+                        <br><br>
+
+                        <b>Lecture Context:</b>
+
+                        {source['text']}
+
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
