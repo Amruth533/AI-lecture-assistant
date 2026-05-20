@@ -9,7 +9,7 @@ import requests
 # ============================================================
 
 st.set_page_config(
-    page_title="AK Lecture Assistant",
+    page_title="AI Lecture Assistant",
     page_icon="🎓",
     layout="wide"
 )
@@ -60,7 +60,7 @@ st.markdown(
 # HEADER
 # ============================================================
 
-st.title("🎓 AK Lecture Assistant")
+st.title("🎓 AI Lecture Assistant")
 
 st.caption(
     "AI-powered lecture summarization and grounded Q&A"

@@ -30,7 +30,7 @@ from agents.learning import (
 # ============================================================
 
 app = FastAPI(
-    title="AK Lecture Assistant"
+    title="AI Lecture Assistant"
 )
 
 
@@ -76,7 +76,7 @@ class QuestionRequest(BaseModel):
 def root():
 
     return {
-        "message": "AK Lecture Assistant API Running"
+        "message": "AI Lecture Assistant API Running"
     }
 
 
