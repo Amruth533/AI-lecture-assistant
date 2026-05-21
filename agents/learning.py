@@ -5,6 +5,7 @@ AI Lecture Assistant - Learning Module
 
 Features:
 - Lecture summarization
+- Long lecture support
 - Grounded Q&A
 - Hallucination control
 - Ollama integration
@@ -90,7 +91,12 @@ def ask_ollama(prompt: str) -> str:
 
 def generate_summary(text: str) -> str:
     """
-    Generate bullet-point lecture summary.
+    Generate scalable lecture summary.
+
+    Supports:
+    - short lectures
+    - long lectures
+    - 20k–30k+ word transcripts
     """
 
     try:
@@ -99,10 +105,13 @@ def generate_summary(text: str) -> str:
 
             return "No transcript available."
 
-        # Prevent overly large prompts
-        text = text[:5000]
+        # ----------------------------------------------------
+        # SHORT LECTURES
+        # ----------------------------------------------------
 
-        prompt = f"""
+        if len(text) < 6000:
+
+            prompt = f"""
 Summarize the following lecture into concise bullet points.
 
 Lecture Transcript:
@@ -114,13 +123,79 @@ IMPORTANT:
 - Focus on major concepts
 """
 
-        response = ask_ollama(prompt)
+            return ask_ollama(prompt)
 
-        return response
+        # ----------------------------------------------------
+        # LONG LECTURES
+        # ----------------------------------------------------
+
+        chunk_size = 5000
+
+        summaries = []
+
+        for i in range(
+            0,
+            len(text),
+            chunk_size
+        ):
+
+            chunk = text[
+                i:i + chunk_size
+            ]
+
+            chunk_prompt = f"""
+Summarize this lecture section into concise bullet points.
+
+Lecture Section:
+{chunk}
+
+IMPORTANT:
+- Return ONLY bullet points
+- Focus on key ideas
+- Keep concise
+"""
+
+            chunk_summary = ask_ollama(
+                chunk_prompt
+            )
+
+            summaries.append(
+                chunk_summary
+            )
+
+        # ----------------------------------------------------
+        # MERGE CHUNK SUMMARIES
+        # ----------------------------------------------------
+
+        combined_summary = "\n".join(
+            summaries
+        )
+
+        final_prompt = f"""
+Create a FINAL lecture summary from these section summaries.
+
+Section Summaries:
+{combined_summary}
+
+IMPORTANT:
+- Return ONLY bullet points
+- Remove repetition
+- Keep major concepts only
+- Create clean final lecture notes
+"""
+
+        final_summary = ask_ollama(
+            final_prompt
+        )
+
+        return final_summary
 
     except Exception as e:
 
-        return f"Summary generation failed: {str(e)}"
+        return (
+            f"Summary generation failed: "
+            f"{str(e)}"
+        )
 
 
 # ============================================================
@@ -175,7 +250,9 @@ Lecture Context:
 """
             )
 
-        context = "\n\n".join(context_list)
+        context = "\n\n".join(
+            context_list
+        )
 
         # ----------------------------------------------------
         # FINAL PROMPT
@@ -207,7 +284,9 @@ Answer ONLY from the lecture context.
         # GET RESPONSE
         # ----------------------------------------------------
 
-        response = ask_ollama(prompt)
+        response = ask_ollama(
+            prompt
+        )
 
         # ----------------------------------------------------
         # EXTRA HALLUCINATION FILTER
@@ -248,7 +327,10 @@ Answer ONLY from the lecture context.
     except Exception as e:
 
         return {
-            "answer": f"Question answering failed: {str(e)}",
+            "answer": (
+                f"Question answering failed: "
+                f"{str(e)}"
+            ),
             "sources": []
         }
 

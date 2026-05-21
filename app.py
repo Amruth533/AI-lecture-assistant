@@ -1,8 +1,5 @@
-# app.py
-
 import streamlit as st
 import requests
-
 
 # ============================================================
 # PAGE CONFIG
@@ -13,7 +10,6 @@ st.set_page_config(
     page_icon="🎓",
     layout="wide"
 )
-
 
 # ============================================================
 # CUSTOM CSS
@@ -41,6 +37,7 @@ st.markdown(
         border-radius: 12px;
         border: 1px solid #374151;
         margin-top: 10px;
+        color: white;
     }
 
     .source-box {
@@ -48,13 +45,13 @@ st.markdown(
         padding: 15px;
         border-radius: 10px;
         margin-bottom: 10px;
+        color: white;
     }
 
     </style>
     """,
     unsafe_allow_html=True
 )
-
 
 # ============================================================
 # HEADER
@@ -65,7 +62,6 @@ st.title("🎓 AI Lecture Assistant")
 st.caption(
     "AI-powered lecture summarization and grounded Q&A"
 )
-
 
 # ============================================================
 # SESSION STATE
@@ -86,6 +82,8 @@ if "stats" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
+if "transcript_source" not in st.session_state:
+    st.session_state.transcript_source = ""
 
 # ============================================================
 # SIDEBAR
@@ -112,7 +110,6 @@ with st.sidebar:
         "from lecture transcript context."
     )
 
-
 # ============================================================
 # YOUTUBE URL INPUT
 # ============================================================
@@ -120,7 +117,6 @@ with st.sidebar:
 url = st.text_input(
     "📺 Enter YouTube Lecture URL"
 )
-
 
 # ============================================================
 # PROCESS BUTTON
@@ -130,7 +126,9 @@ if st.button("🚀 Process Lecture"):
 
     if not url:
 
-        st.warning("Please enter a valid YouTube URL.")
+        st.warning(
+            "Please enter a valid YouTube URL."
+        )
 
     else:
 
@@ -156,7 +154,9 @@ if st.button("🚀 Process Lecture"):
 
                     st.session_state.processed = True
 
-                    st.session_state.summary = data["summary"]
+                    st.session_state.summary = (
+                        data["summary"]
+                    )
 
                     st.session_state.transcript = (
                         data["transcript"]
@@ -166,14 +166,19 @@ if st.button("🚀 Process Lecture"):
                         data["stats"]
                     )
 
+                    st.session_state.transcript_source = (
+                        data["transcript_source"]
+                    )
+
                     st.success(
                         "Lecture processed successfully!"
                     )
 
             except Exception as e:
 
-                st.error(f"Error: {str(e)}")
-
+                st.error(
+                    f"Error: {str(e)}"
+                )
 
 # ============================================================
 # DISPLAY RESULTS
@@ -184,7 +189,7 @@ if st.session_state.processed:
     col1, col2 = st.columns([1, 1])
 
     # --------------------------------------------------------
-    # LEFT SIDE
+    # LEFT COLUMN
     # --------------------------------------------------------
 
     with col1:
@@ -218,19 +223,47 @@ if st.session_state.processed:
             )
 
     # --------------------------------------------------------
-    # RIGHT SIDE
+    # RIGHT COLUMN
     # --------------------------------------------------------
 
     with col2:
 
         st.subheader("📄 Transcript")
 
+        # ====================================================
+        # TRANSCRIPT SOURCE UI
+        # ====================================================
+
+        source = st.session_state.transcript_source
+
+        if source == "YouTube Captions":
+
+            st.success(
+                "Transcript Source: YouTube Captions"
+            )
+
+        elif source == "Whisper AI":
+
+            st.warning(
+                "Transcript Source: Whisper AI "
+                "(generated from audio)"
+            )
+
+        else:
+
+            st.info(
+                f"Transcript Source: {source}"
+            )
+
+        # ====================================================
+        # TRANSCRIPT DISPLAY
+        # ====================================================
+
         st.text_area(
             "Transcript",
             st.session_state.transcript,
             height=500
         )
-
 
 # ============================================================
 # Q&A SECTION
@@ -243,7 +276,6 @@ st.subheader("💬 Ask Questions")
 question = st.text_input(
     "Ask a question about the lecture"
 )
-
 
 # ============================================================
 # ASK BUTTON
@@ -297,10 +329,6 @@ if st.button("Ask AI"):
                         []
                     )
 
-                    # ------------------------------------
-                    # SAVE CHAT HISTORY
-                    # ------------------------------------
-
                     st.session_state.chat_history.append({
                         "question": question,
                         "answer": answer,
@@ -309,8 +337,9 @@ if st.button("Ask AI"):
 
             except Exception as e:
 
-                st.error(f"Error: {str(e)}")
-
+                st.error(
+                    f"Error: {str(e)}"
+                )
 
 # ============================================================
 # CHAT HISTORY
@@ -338,43 +367,3 @@ if st.session_state.chat_history:
             """,
             unsafe_allow_html=True
         )
-
-        # ----------------------------------------------------
-        # SOURCES
-        # ----------------------------------------------------
-
-        if chat["sources"]:
-
-            with st.expander(
-                "📚 Retrieved Lecture Context"
-            ):
-
-                for source in chat["sources"]:
-
-                    timestamp = round(
-                        source["start"] / 60,
-                        2
-                    )
-
-                    st.markdown(
-                        f"""
-                        <div class="source-box">
-
-                        <b>Timestamp:</b>
-                        {timestamp} min
-
-                        <br><br>
-
-                        <b>Similarity Score:</b>
-                        {round(source['score'], 3)}
-
-                        <br><br>
-
-                        <b>Lecture Context:</b>
-
-                        {source['text']}
-
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )

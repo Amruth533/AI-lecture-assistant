@@ -97,25 +97,43 @@ def process_video(data: VideoRequest):
         # FETCH TRANSCRIPT
         # ----------------------------------------------------
 
-        transcript = fetch_transcript(data.url)
+        transcript_data = fetch_transcript(
+            data.url
+        )
 
-        if not transcript:
+        if not transcript_data:
 
             return {
                 "error": "Transcript could not be fetched."
             }
 
         # ----------------------------------------------------
+        # EXTRACT TRANSCRIPT + SOURCE
+        # ----------------------------------------------------
+
+        transcript = transcript_data[
+            "transcript"
+        ]
+
+        transcript_source = transcript_data[
+            "source"
+        ]
+
+        # ----------------------------------------------------
         # FULL TEXT
         # ----------------------------------------------------
 
-        full_text = transcript_to_text(transcript)
+        full_text = transcript_to_text(
+            transcript
+        )
 
         # ----------------------------------------------------
         # CHUNKING
         # ----------------------------------------------------
 
-        chunks = chunk_transcript(transcript)
+        chunks = chunk_transcript(
+            transcript
+        )
 
         if not chunks:
 
@@ -127,19 +145,25 @@ def process_video(data: VideoRequest):
         # VECTOR STORE
         # ----------------------------------------------------
 
-        index = create_vector_store(chunks)
+        index = create_vector_store(
+            chunks
+        )
 
         if index is None:
 
             return {
-                "error": "Vector store creation failed."
+                "error": (
+                    "Vector store creation failed."
+                )
             }
 
         # ----------------------------------------------------
         # SUMMARY
         # ----------------------------------------------------
 
-        summary = generate_summary(full_text)
+        summary = generate_summary(
+            full_text
+        )
 
         # ----------------------------------------------------
         # STORE GLOBALLY
@@ -155,9 +179,22 @@ def process_video(data: VideoRequest):
 
         return {
             "summary": summary,
+
             "transcript": full_text[:5000],
+
+            # ================================================
+            # TRANSCRIPT SOURCE
+            # ================================================
+
+            "transcript_source": (
+                transcript_source
+            ),
+
             "stats": {
-                "word_count": len(full_text.split()),
+                "word_count": len(
+                    full_text.split()
+                ),
+
                 "chunk_count": len(chunks)
             }
         }
@@ -165,7 +202,9 @@ def process_video(data: VideoRequest):
     except Exception as e:
 
         return {
-            "error": f"Processing failed: {str(e)}"
+            "error": (
+                f"Processing failed: {str(e)}"
+            )
         }
 
 
@@ -174,7 +213,9 @@ def process_video(data: VideoRequest):
 # ============================================================
 
 @app.post("/ask")
-def ask_question_endpoint(data: QuestionRequest):
+def ask_question_endpoint(
+    data: QuestionRequest
+):
 
     global vector_index
     global stored_chunks
@@ -217,7 +258,10 @@ def ask_question_endpoint(data: QuestionRequest):
     except Exception as e:
 
         return {
-            "error": f"Question answering failed: {str(e)}"
+            "error": (
+                f"Question answering failed: "
+                f"{str(e)}"
+            )
         }
 
 
