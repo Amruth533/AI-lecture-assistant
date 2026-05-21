@@ -3,6 +3,10 @@
 AI-powered lecture learning assistant that transforms YouTube lectures into structured summaries, grounded Q&A, and interactive learning experiences using Retrieval-Augmented Generation (RAG).
 
 ---
+<img width="3805" height="2039" alt="Screenshot 2026-05-21 114101" src="https://github.com/user-attachments/assets/74a458e0-f109-4599-92cc-680af74c3f64" />
+
+<img width="3788" height="1857" alt="Screenshot 2026-05-21 114142" src="https://github.com/user-attachments/assets/4c840eee-6cbb-4abc-8def-be086b9224c8" />
+
 
 # 🚀 Overview
 
