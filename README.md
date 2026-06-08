@@ -446,6 +446,6 @@ MIT License
 
 # 👨‍💻 Author
 
-Developed by Amruth Sai
+Developed by Narasimha Vemuganti
 
 AI Engineering • RAG Systems • NLP • Full Stack AI Applications
